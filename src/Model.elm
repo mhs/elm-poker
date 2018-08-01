@@ -1,13 +1,17 @@
-module Model exposing (Model, Page(..), initialModel)
+module Model exposing (Flags, Model, Page(..), initialModel)
 
-import Json.Decode as Decode exposing (Value)
+import View.Session.Login as Login
+
+
+type alias Flags =
+    {}
 
 
 type Page
     = Blank
     | NotFound
     | Home
-    | Login
+    | Login Login.Model
     | GameList
     | Game
 
@@ -17,7 +21,7 @@ type alias Model =
     }
 
 
-initialModel : Value -> Model
-initialModel val =
+initialModel : Flags -> Model
+initialModel flags =
     { page = Blank
     }

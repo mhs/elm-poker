@@ -53,7 +53,7 @@ isActive currentPage linkRoute =
         ( Model.Home, Route.Home ) ->
             True
 
-        ( Model.Login, Route.Login ) ->
+        ( Model.Login subModel, Route.Login ) ->
             True
 
         ( Model.GameList, Route.GameList ) ->

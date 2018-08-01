@@ -1,21 +1,16 @@
 module Update exposing (init, update)
 
-import Json.Decode as Decode exposing (Value)
 import Messages exposing (Msg(..))
-import Model exposing (Model, Page(..), initialModel)
+import Model exposing (Flags, Model, Page(..), initialModel)
 import Navigation exposing (Location)
-import Route exposing (Route)
+import Route exposing (Route, redirectTo)
 import Util exposing ((=>))
+import View.Session.Login as Login
 
 
-init : Value -> Location -> ( Model, Cmd Msg )
-init val location =
-    updateRoute (Route.fromLocation location) (initialModel val)
-
-
-redirectTo : Route -> Cmd Msg
-redirectTo =
-    Route.routeToString >> Navigation.modifyUrl
+init : Flags -> Location -> ( Model, Cmd Msg )
+init flags location =
+    updateRoute (Route.fromLocation location) (initialModel flags)
 
 
 updateRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
@@ -28,7 +23,7 @@ updateRoute route model =
             model => redirectTo Route.Login
 
         Just Route.Login ->
-            { model | page = Login } => Cmd.none
+            { model | page = Login Login.initialModel } => Cmd.none
 
         Just Route.GameList ->
             { model | page = GameList } => Cmd.none
@@ -39,6 +34,17 @@ updateRoute route model =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        SetRoute route ->
+    updatePage model.page msg model
+
+
+updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
+updatePage currentPage msg model =
+    case ( msg, currentPage ) of
+        ( SetRoute route, _ ) ->
             updateRoute route model
+
+        ( LoginMsg subMsg, Login subModel ) ->
+            ( model, Cmd.none )
+
+        ( _, _ ) ->
+            ( model, Cmd.none )

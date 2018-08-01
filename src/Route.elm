@@ -1,4 +1,4 @@
-module Route exposing (Route(..), fromLocation, routeToString)
+module Route exposing (Route(..), fromLocation, redirectTo, routeToString)
 
 import Navigation exposing (Location)
 import UrlParser as Url exposing ((</>), Parser, int, oneOf, parseHash, s, string, top)
@@ -58,3 +58,9 @@ routeToString page =
 fromLocation : Location -> Maybe Route
 fromLocation location =
     parseHash route location
+
+
+redirectTo : Route -> Cmd msg
+redirectTo =
+    -- TODO: if current user, continue, otherwise go to login
+    routeToString >> Navigation.modifyUrl

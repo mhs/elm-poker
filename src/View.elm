@@ -27,8 +27,9 @@ view model =
         Home ->
             frame Home.view
 
-        Login ->
-            frame Login.view
+        Login subModel ->
+            frame (Login.view subModel)
+                |> Html.map LoginMsg
 
         GameList ->
             frame GameList.view
