@@ -22,7 +22,7 @@ textarea name =
 viewErrors : List ( a, String ) -> Html msg
 viewErrors errors =
     errors
-        |> List.map (\( _, error ) -> li [ class "dib" ] [ text error ])
+        |> List.map (\( field, error ) -> li [] [ text (toString field ++ ": " ++ error) ])
         |> ul [ class "ph2 tl f6 red measure" ]
 
 

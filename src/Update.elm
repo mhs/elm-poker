@@ -44,7 +44,20 @@ updatePage currentPage msg model =
             updateRoute route model
 
         ( LoginMsg subMsg, Login subModel ) ->
-            ( model, Cmd.none )
+            let
+                ( ( pageModel, cmd ), externalMsg ) =
+                    Login.update subMsg subModel
+
+                updatedModel =
+                    case externalMsg of
+                        Login.NoOp ->
+                            model
+
+                        Login.SetSession session ->
+                            model
+            in
+            { updatedModel | page = Login pageModel }
+                => Cmd.map LoginMsg cmd
 
         ( _, _ ) ->
             ( model, Cmd.none )

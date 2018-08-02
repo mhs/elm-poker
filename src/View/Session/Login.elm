@@ -1,7 +1,7 @@
-module View.Session.Login exposing (ExternalMsg(..), Model, Msg(..), initialModel, view)
+module View.Session.Login exposing (ExternalMsg(..), Model, Msg(..), initialModel, update, view)
 
 import Graphqelm.Http
-import Helpers.Form as Form exposing (input)
+import Helpers.Form as Form exposing (input, viewErrors)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -13,6 +13,15 @@ import Validate exposing (Validator, ifBlank, ifInvalidEmail, validate)
 
 
 -- MODEL --
+
+
+type Field
+    = Form
+    | Email
+
+
+type alias Error =
+    ( Field, String )
 
 
 type alias Model =
@@ -52,7 +61,9 @@ view model =
     div [ class "mt4 mt6-1 pa4" ]
         [ h1 [] [ text "Log in" ]
         , div [ class "measure center" ]
-            [ viewForm ]
+            [ viewErrors model.errors
+            , viewForm
+            ]
         ]
 
 
@@ -60,7 +71,7 @@ viewForm : Html Msg
 viewForm =
     Html.form [ onSubmit SubmitForm ]
         [ Form.input "Email" [ type_ "email", onInput SetEmail ] []
-        , button [ class "b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6" ] [ text "Log In" ]
+        , button [ value "submit", class "b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6" ] [ text "Log In" ]
         ]
 
 
@@ -119,18 +130,11 @@ processApiError error =
 -- VALIDATION
 
 
-type Field
-    = Form
-    | Email
-
-
-type alias Error =
-    ( Field, String )
-
-
 modelValidator : Validator Error Model
 modelValidator =
-    Validate.firstError
-        [ ifBlank .email (Email => "can't be blank")
-        , ifInvalidEmail .email <| \email -> Email => "'" ++ email ++ "' is not a valid email address"
+    Validate.all
+        [ Validate.firstError
+            [ ifBlank .email (Email => "can't be blank")
+            , ifInvalidEmail .email <| \email -> Email => "'" ++ email ++ "' is not a valid email address"
+            ]
         ]
