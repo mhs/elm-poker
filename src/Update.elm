@@ -20,8 +20,12 @@ updateRoute route model =
             { model | page = NotFound } => Cmd.none
 
         Just Route.Home ->
-            model => redirectTo Route.Login
+            case model.session of
+                Just _ ->
+                    model => redirectTo Route.GameList
 
+                Nothing ->
+                    model => redirectTo Route.Login
         Just Route.Login ->
             { model | page = Login Login.initialModel } => Cmd.none
 
@@ -29,7 +33,12 @@ updateRoute route model =
             { model | page = GameList } => Cmd.none
 
         Just (Route.Game id) ->
-            { model | page = Game } => Cmd.none
+            case model.session of
+                Just _ ->
+                    { model | page = Game } => Cmd.none
+
+                Nothing ->
+                    model => redirectTo Route.Login
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -54,7 +63,7 @@ updatePage currentPage msg model =
                             model
 
                         Login.SetSession session ->
-                            model
+                            { model | session = session }
             in
             { updatedModel | page = Login pageModel }
                 => Cmd.map LoginMsg cmd

@@ -1,5 +1,6 @@
 module Model exposing (Flags, Model, Page(..), initialModel)
 
+import Model.Session exposing (Session)
 import Session.Login as Login
 
 
@@ -18,10 +19,12 @@ type Page
 
 type alias Model =
     { page : Page
+    , session : Maybe Session
     }
 
 
 initialModel : Flags -> Model
 initialModel flags =
     { page = Blank
+    , session = Nothing
     }
