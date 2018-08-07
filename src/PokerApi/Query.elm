@@ -27,6 +27,13 @@ selection constructor =
     Object.selection constructor
 
 
+{-| Gets the profile for the current user
+-}
+currentUser : SelectionSet decodesTo PokerApi.Object.User -> Field (Maybe decodesTo) RootQuery
+currentUser object =
+    Object.selectionField "currentUser" [] object (identity >> Decode.nullable)
+
+
 type alias GameRequiredArguments =
     { id : PokerApi.Scalar.Id }
 
@@ -43,6 +50,13 @@ game requiredArgs object =
 games : SelectionSet decodesTo PokerApi.Object.Game -> Field (Maybe (List (Maybe decodesTo))) RootQuery
 games object =
     Object.selectionField "games" [] object (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
+
+
+{-| Get all games for the current user
+-}
+myGames : SelectionSet decodesTo PokerApi.Object.Game -> Field (List (Maybe decodesTo)) RootQuery
+myGames object =
+    Object.selectionField "myGames" [] object (identity >> Decode.nullable >> Decode.list)
 
 
 type alias RoundRequiredArguments =

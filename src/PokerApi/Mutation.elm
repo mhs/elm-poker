@@ -27,13 +27,6 @@ selection constructor =
     Object.selection constructor
 
 
-{-| Gets the profile for the current user
--}
-currentUser : SelectionSet decodesTo PokerApi.Object.User -> Field (Maybe decodesTo) RootMutation
-currentUser object =
-    Object.selectionField "currentUser" [] object (identity >> Decode.nullable)
-
-
 type alias LoginRequiredArguments =
     { email : String }
 

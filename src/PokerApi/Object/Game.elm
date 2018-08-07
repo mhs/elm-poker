@@ -40,9 +40,14 @@ name =
     Object.fieldDecoder "name" [] Decode.string
 
 
-rounds : SelectionSet decodesTo PokerApi.Object.Round -> Field (Maybe (List (Maybe decodesTo))) PokerApi.Object.Game
+players : SelectionSet decodesTo PokerApi.Object.User -> Field (Maybe (List (Maybe decodesTo))) PokerApi.Object.Game
+players object =
+    Object.selectionField "players" [] object (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
+
+
+rounds : SelectionSet decodesTo PokerApi.Object.Round -> Field (List (Maybe decodesTo)) PokerApi.Object.Game
 rounds object =
-    Object.selectionField "rounds" [] object (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
+    Object.selectionField "rounds" [] object (identity >> Decode.nullable >> Decode.list)
 
 
 status : Field String PokerApi.Object.Game
