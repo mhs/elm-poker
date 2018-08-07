@@ -4,8 +4,8 @@ import Messages exposing (Msg(..))
 import Model exposing (Flags, Model, Page(..), initialModel)
 import Navigation exposing (Location)
 import Route exposing (Route, redirectTo)
+import Session.Login as Login
 import Util exposing ((=>))
-import View.Session.Login as Login
 
 
 init : Flags -> Location -> ( Model, Cmd Msg )

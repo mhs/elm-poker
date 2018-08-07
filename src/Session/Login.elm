@@ -1,12 +1,16 @@
-module View.Session.Login exposing (ExternalMsg(..), Model, Msg(..), initialModel, update, view)
+module Session.Login exposing (ExternalMsg(..), Model, Msg(..), initialModel, update, view)
 
-import Graphqelm.Http
+import Graphqelm.Http exposing (Error(..))
+import Graphqelm.Operation exposing (RootMutation)
+import Graphqelm.SelectionSet as SelectionSet exposing (SelectionSet, with)
 import Helpers.Form as Form exposing (input, viewErrors)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Model.Session exposing (Session)
-import RemoteData exposing (RemoteData(..))
+import PokerApi.Mutation as Mutation
+import PokerApi.Object.Session as ApiSession
+import RemoteData exposing (RemoteData)
 import Route exposing (Route(..), redirectTo)
 import Util exposing ((=>))
 import Validate exposing (Validator, ifBlank, ifInvalidEmail, validate)
@@ -41,15 +45,19 @@ initialModel =
 -- MESSAGES --
 
 
+type alias SessionData =
+    RemoteData (Graphqelm.Http.Error (Maybe Session)) (Maybe Session)
+
+
 type Msg
     = SubmitForm
     | SetEmail String
-    | LoginCompleted (RemoteData Graphqelm.Http.Error Session)
+    | LoginCompleted SessionData
 
 
 type ExternalMsg
     = NoOp
-    | SetSession Session
+    | SetSession (Maybe Session)
 
 
 
@@ -99,12 +107,6 @@ update msg model =
                 => Cmd.none
                 => NoOp
 
-        LoginCompleted RemoteData.NotAsked ->
-            model => Cmd.none => NoOp
-
-        LoginCompleted RemoteData.Loading ->
-            model => Cmd.none => NoOp
-
         LoginCompleted (RemoteData.Failure error) ->
             { model | errors = processApiError error }
                 => Cmd.none
@@ -115,15 +117,40 @@ update msg model =
                 => redirectTo Route.Home
                 => SetSession session
 
+        LoginCompleted _ ->
+            model => Cmd.none => NoOp
+
+
+
+-- REQUEST --
+
+
+sessionSelect =
+    ApiSession.selection Session
+        |> with ApiSession.token
+
+
+mutation : Model -> SelectionSet (Maybe Session) RootMutation
+mutation model =
+    Mutation.selection identity
+        |> with (Mutation.login { email = model.email } sessionSelect)
+
 
 makeRequest : Model -> Cmd Msg
 makeRequest model =
-    Cmd.none
+    mutation model
+        |> Graphqelm.Http.mutationRequest "http://localhost:4000/api/graphql"
+        |> Graphqelm.Http.send (RemoteData.fromResult >> LoginCompleted)
 
 
-processApiError : a -> List Error
+processApiError : Graphqelm.Http.Error (Maybe Session) -> List Error
 processApiError error =
-    []
+    case error of
+        GraphqlError data errors ->
+            errors |> List.map .message |> List.map (\m -> Form => m)
+
+        HttpError error ->
+            [ Form => toString error ]
 
 
 

@@ -1,6 +1,6 @@
 module Model exposing (Flags, Model, Page(..), initialModel)
 
-import View.Session.Login as Login
+import Session.Login as Login
 
 
 type alias Flags =
