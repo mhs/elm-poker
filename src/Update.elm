@@ -2,6 +2,8 @@ module Update exposing (init, update)
 
 import Messages exposing (Msg(..))
 import Model exposing (Flags, Model, Page(..), initialModel)
+import Model.PokerGame exposing (PokerGame)
+import Model.Session exposing (Session(..))
 import Navigation exposing (Location)
 import Route exposing (Route, redirectTo)
 import Session.Login as Login
@@ -21,11 +23,12 @@ updateRoute route model =
 
         Just Route.Home ->
             case model.session of
-                Just _ ->
+                LoggedIn _ _ ->
                     model => redirectTo Route.GameList
 
-                Nothing ->
+                NotLoggedIn ->
                     model => redirectTo Route.Login
+
         Just Route.Login ->
             { model | page = Login Login.initialModel } => Cmd.none
 
@@ -34,10 +37,10 @@ updateRoute route model =
 
         Just (Route.Game id) ->
             case model.session of
-                Just _ ->
+                LoggedIn _ _ ->
                     { model | page = Game } => Cmd.none
 
-                Nothing ->
+                NotLoggedIn ->
                     model => redirectTo Route.Login
 
 
@@ -62,8 +65,8 @@ updatePage currentPage msg model =
                         Login.NoOp ->
                             model
 
-                        Login.SetSession session ->
-                            { model | session = session }
+                        Login.SetSession userToken ->
+                            { model | session = LoggedIn userToken Nothing }
             in
             { updatedModel | page = Login pageModel }
                 => Cmd.map LoginMsg cmd

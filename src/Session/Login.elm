@@ -7,7 +7,7 @@ import Helpers.Form as Form exposing (input, viewErrors)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Model.Session exposing (Session)
+import Model.Session exposing (Session(..), UserToken)
 import PokerApi.Mutation as Mutation
 import PokerApi.Object.Session as ApiSession
 import RemoteData exposing (RemoteData)
@@ -46,7 +46,7 @@ initialModel =
 
 
 type alias SessionData =
-    RemoteData (Graphqelm.Http.Error (Maybe Session)) (Maybe Session)
+    RemoteData (Graphqelm.Http.Error (Maybe UserToken)) (Maybe UserToken)
 
 
 type Msg
@@ -57,7 +57,7 @@ type Msg
 
 type ExternalMsg
     = NoOp
-    | SetSession (Maybe Session)
+    | SetSession (Maybe UserToken)
 
 
 
@@ -126,11 +126,11 @@ update msg model =
 
 
 sessionSelect =
-    ApiSession.selection Session
+    ApiSession.selection UserToken
         |> with ApiSession.token
 
 
-mutation : Model -> SelectionSet (Maybe Session) RootMutation
+mutation : Model -> SelectionSet (Maybe UserToken) RootMutation
 mutation model =
     Mutation.selection identity
         |> with (Mutation.login { email = model.email } sessionSelect)
@@ -143,7 +143,7 @@ makeRequest model =
         |> Graphqelm.Http.send (RemoteData.fromResult >> LoginCompleted)
 
 
-processApiError : Graphqelm.Http.Error (Maybe Session) -> List Error
+processApiError : Graphqelm.Http.Error (Maybe UserToken) -> List Error
 processApiError error =
     case error of
         GraphqlError data errors ->
