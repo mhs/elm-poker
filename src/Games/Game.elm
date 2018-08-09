@@ -1,4 +1,4 @@
-module View.Games.Game exposing (view)
+module Games.Game exposing (view)
 
 import Html exposing (..)
 
