@@ -27,6 +27,61 @@ selection constructor =
     Object.selection constructor
 
 
+type alias CloseRoundRequiredArguments =
+    { id : PokerApi.Scalar.Id }
+
+
+{-| Closes the current round without opening a new one
+-}
+closeRound : CloseRoundRequiredArguments -> SelectionSet decodesTo PokerApi.Object.Round -> Field (Maybe decodesTo) RootMutation
+closeRound requiredArgs object =
+    Object.selectionField "closeRound" [ Argument.required "id" requiredArgs.id (\(PokerApi.Scalar.Id raw) -> Encode.string raw) ] object (identity >> Decode.nullable)
+
+
+type alias CreateGameRequiredArguments =
+    { name : String }
+
+
+{-| Create a game
+-}
+createGame : CreateGameRequiredArguments -> SelectionSet decodesTo PokerApi.Object.Game -> Field (Maybe decodesTo) RootMutation
+createGame requiredArgs object =
+    Object.selectionField "createGame" [ Argument.required "name" requiredArgs.name Encode.string ] object (identity >> Decode.nullable)
+
+
+type alias DeleteGameRequiredArguments =
+    { id : PokerApi.Scalar.Id }
+
+
+{-| Delete a game
+-}
+deleteGame : DeleteGameRequiredArguments -> SelectionSet decodesTo PokerApi.Object.Game -> Field (Maybe decodesTo) RootMutation
+deleteGame requiredArgs object =
+    Object.selectionField "deleteGame" [ Argument.required "id" requiredArgs.id (\(PokerApi.Scalar.Id raw) -> Encode.string raw) ] object (identity >> Decode.nullable)
+
+
+type alias JoinGameRequiredArguments =
+    { id : PokerApi.Scalar.Id }
+
+
+{-| Join a game with the current user
+-}
+joinGame : JoinGameRequiredArguments -> SelectionSet decodesTo PokerApi.Object.Game -> Field (Maybe decodesTo) RootMutation
+joinGame requiredArgs object =
+    Object.selectionField "joinGame" [ Argument.required "id" requiredArgs.id (\(PokerApi.Scalar.Id raw) -> Encode.string raw) ] object (identity >> Decode.nullable)
+
+
+type alias LeaveGameRequiredArguments =
+    { id : PokerApi.Scalar.Id }
+
+
+{-| Leave a game with the current user
+-}
+leaveGame : LeaveGameRequiredArguments -> SelectionSet decodesTo PokerApi.Object.Game -> Field (Maybe decodesTo) RootMutation
+leaveGame requiredArgs object =
+    Object.selectionField "leaveGame" [ Argument.required "id" requiredArgs.id (\(PokerApi.Scalar.Id raw) -> Encode.string raw) ] object (identity >> Decode.nullable)
+
+
 type alias LoginRequiredArguments =
     { email : String }
 
@@ -36,6 +91,17 @@ type alias LoginRequiredArguments =
 login : LoginRequiredArguments -> SelectionSet decodesTo PokerApi.Object.Session -> Field (Maybe decodesTo) RootMutation
 login requiredArgs object =
     Object.selectionField "login" [ Argument.required "email" requiredArgs.email Encode.string ] object (identity >> Decode.nullable)
+
+
+type alias NextRoundRequiredArguments =
+    { gameId : PokerApi.Scalar.Id }
+
+
+{-| Creates a new round for the given game, also creates new estimates for all players
+-}
+nextRound : NextRoundRequiredArguments -> SelectionSet decodesTo PokerApi.Object.Round -> Field (Maybe decodesTo) RootMutation
+nextRound requiredArgs object =
+    Object.selectionField "nextRound" [ Argument.required "gameId" requiredArgs.gameId (\(PokerApi.Scalar.Id raw) -> Encode.string raw) ] object (identity >> Decode.nullable)
 
 
 type alias UpdateEstimateOptionalArguments =
