@@ -15,7 +15,7 @@ view : Model -> Html Msg
 view model =
     let
         frame =
-            Page.frame model.page
+            Page.frame model.page model.session
     in
     case model.page of
         NotFound ->
@@ -32,7 +32,7 @@ view model =
                 |> Html.map LoginMsg
 
         GameList ->
-            frame GameList.view
+            frame (GameList.view model.session)
 
         Game ->
             frame Game.view

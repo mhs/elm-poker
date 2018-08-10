@@ -1,35 +1,43 @@
-module View.Page exposing (frame)
+module View.Page exposing (frame, rhref)
 
 import Html exposing (..)
 import Html.Attributes as Attr exposing (..)
 import Model exposing (Page(..))
+import Model.Session exposing (Session(..))
 import Route exposing (Route(..))
 
 
-href : Route -> Attribute msg
-href route =
+rhref : Route -> Attribute msg
+rhref route =
     route
         |> Route.routeToString
         |> Attr.href
 
 
-frame : Page -> Html msg -> Html msg
-frame currentPage content =
+frame : Page -> Session -> Html msg -> Html msg
+frame currentPage session content =
     div []
-        [ viewHeader currentPage
+        [ viewHeader currentPage session
         , content
         ]
 
 
-viewHeader : Page -> Html msg
-viewHeader currentPage =
-    nav [ class "dt w-100 border-box pa3 ph5-ns" ]
-        [ a [ class "dtc v-mid mid-gray link dim w-25", title "Home", href Route.Home ] [ text "Planning Poker" ]
-        , div [ class "dtc v-mid w-75 tr" ] <|
-            [ navbarLink currentPage Route.Home [ text "Home" ]
-            , navbarLink currentPage Route.Login [ text "Login" ]
-            , navbarLink currentPage Route.GameList [ text "Games" ]
-            ]
+viewHeader : Page -> Session -> Html msg
+viewHeader currentPage session =
+    let
+        navLinks =
+            case session of
+                NotLoggedIn ->
+                    [ navbarLink currentPage Route.Login [ text "Login" ] ]
+
+                LoggedIn _ _ ->
+                    [ navbarLink currentPage Route.Home [ text "Home" ]
+                    , navbarLink currentPage Route.GameList [ text "Games" ]
+                    ]
+    in
+    header [ class "bg-white black-80 tc pv4 avenir" ]
+        [ a [ class "mt2 mb0 link baskerville i fw1 f1", title "Home", rhref Route.Home ] [ text "Planning Poker" ]
+        , nav [ class "bt bb tc mw7 center mt4" ] navLinks
         ]
 
 
@@ -39,12 +47,12 @@ navbarLink currentPage linkRoute linkContent =
         active =
             case isActive currentPage linkRoute of
                 True ->
-                    "active"
+                    "bg-light-green"
 
                 False ->
-                    "inactive"
+                    ""
     in
-    a [ href linkRoute, class "link hover-black f6 f5-ns dib mr3 mr4-ns", class active ] linkContent
+    a [ rhref linkRoute, class "f6 f5-l link bg-animate black-80 hover-bg-lightest-blue dib pa3 ph3-l", class active ] linkContent
 
 
 isActive : Page -> Route -> Bool
