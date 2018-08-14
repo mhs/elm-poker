@@ -42,7 +42,7 @@ listGames session =
                             p [] [ text "No games yet!" ]
 
                         _ ->
-                            ul [] (List.map gameLink games)
+                            ul [ class "list p10" ] (List.map gameLink games)
             in
             div [] [ list ]
 
@@ -51,9 +51,10 @@ gameLink : Maybe PokerGame -> Html msg
 gameLink maybeGame =
     case maybeGame of
         Nothing ->
-            p [] [ text "this is a game" ]
+            Debug.crash "Unparseable game?" (toString maybeGame)
 
         Just game ->
-            li []
+            li [ class "lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30" ]
                 [ a [ rhref (Route.Game game.id), class "link hover-black f6 f5-ns dib mr3 mr4-ns" ] [ text game.name ]
+                , text ("( " ++ game.status ++ " )")
                 ]

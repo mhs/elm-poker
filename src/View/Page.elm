@@ -18,7 +18,11 @@ frame : Page -> Session -> Html msg -> Html msg
 frame currentPage session content =
     div []
         [ viewHeader currentPage session
-        , content
+        , section [ class "pa4 black-80 avenir" ]
+            [ div [ class "measure center" ]
+                [ content
+                ]
+            ]
         ]
 
 
@@ -31,12 +35,12 @@ viewHeader currentPage session =
                     [ navbarLink currentPage Route.Login [ text "Login" ] ]
 
                 LoggedIn _ _ ->
-                    [ navbarLink currentPage Route.Home [ text "Home" ]
-                    , navbarLink currentPage Route.GameList [ text "Games" ]
+                    [ navbarLink currentPage Route.GameList [ text "Games" ]
+                    , navbarLink currentPage Route.Login [ text "Logout" ]
                     ]
     in
     header [ class "bg-white black-80 tc pv4 avenir" ]
-        [ a [ class "mt2 mb0 link baskerville i fw1 f1", title "Home", rhref Route.Home ] [ text "Planning Poker" ]
+        [ a [ class "mt2 mb0 link baskerville i fw1 f1", rhref Route.Home ] [ text "Planning Poker" ]
         , nav [ class "bt bb tc mw7 center mt4" ] navLinks
         ]
 
