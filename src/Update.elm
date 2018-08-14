@@ -1,26 +1,23 @@
 module Update exposing (init, update)
 
-import Graphqelm.Http exposing (Error(..))
-import Graphqelm.SelectionSet as SelectionSet exposing (SelectionSet, with)
-import Messages exposing (Msg(..))
+import Messages as Msg exposing (Msg(..))
 import Model exposing (Flags, Model, Page(..), initialModel)
-import Model.PokerGame exposing (PokerGame)
 import Model.Session exposing (GamesData, Session(..), UserToken)
 import Navigation exposing (Location)
-import PokerApi.Object.Game as ApiGame
-import PokerApi.Query as Query
 import RemoteData exposing (RemoteData)
+import Request exposing (gamesQuery)
 import Route exposing (Route, redirectTo)
 import Session.Login as Login
+import Session.Messages as SessionMsg exposing (ExternalMsg(..), Msg(..))
 import Util exposing ((=>))
 
 
-init : Flags -> Location -> ( Model, Cmd Msg )
+init : Flags -> Location -> ( Model, Cmd Msg.Msg )
 init flags location =
     updateRoute (Route.fromLocation location) (initialModel flags)
 
 
-updateRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
+updateRoute : Maybe Route -> Model -> ( Model, Cmd Msg.Msg )
 updateRoute route model =
     case route of
         Nothing ->
@@ -35,7 +32,16 @@ updateRoute route model =
                     model => redirectTo Route.Login
 
         Just Route.Login ->
-            { model | page = Login Login.initialModel } => Cmd.none
+            let
+                loggedOutModel =
+                    case model.session of
+                        LoggedIn _ _ ->
+                            { model | session = NotLoggedIn }
+
+                        NotLoggedIn ->
+                            model
+            in
+            { loggedOutModel | page = Login Login.initialModel } => Cmd.none
 
         Just Route.GameList ->
             case model.session of
@@ -54,12 +60,12 @@ updateRoute route model =
                     model => redirectTo Route.Login
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
 update msg model =
     updatePage model.page msg model
 
 
-updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
+updatePage : Page -> Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
 updatePage currentPage msg model =
     case ( msg, currentPage ) of
         ( SetRoute route, _ ) ->
@@ -72,10 +78,10 @@ updatePage currentPage msg model =
 
                 updatedModel =
                     case externalMsg of
-                        Login.NoOp ->
+                        SessionMsg.NoOp ->
                             model
 
-                        Login.SetSession userToken ->
+                        SessionMsg.SetSession userToken ->
                             { model | session = LoggedIn userToken RemoteData.NotAsked }
             in
             { updatedModel | page = Login pageModel }
@@ -97,19 +103,7 @@ updatePage currentPage msg model =
 -- REQUEST --
 
 
-gameSelection =
-    ApiGame.selection PokerGame
-        |> with ApiGame.id
-        |> with ApiGame.name
-        |> with ApiGame.status
-
-
-query =
-    Query.selection identity
-        |> with (Query.myGames gameSelection)
-
-
-maybeFetchGames : Maybe UserToken -> GamesData -> Cmd Msg
+maybeFetchGames : Maybe UserToken -> GamesData -> Cmd Msg.Msg
 maybeFetchGames maybeUserToken games =
     case maybeUserToken of
         Nothing ->
@@ -118,10 +112,7 @@ maybeFetchGames maybeUserToken games =
         Just userToken ->
             case games of
                 RemoteData.NotAsked ->
-                    query
-                        |> Graphqelm.Http.queryRequest "http://localhost:4000/api/graphql"
-                        |> Graphqelm.Http.withHeader "authorization" ("Bearer " ++ userToken.token)
-                        |> Graphqelm.Http.send (RemoteData.fromResult >> GotGames)
+                    gamesQuery userToken
 
                 _ ->
                     Cmd.none

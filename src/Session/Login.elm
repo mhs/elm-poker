@@ -1,17 +1,15 @@
-module Session.Login exposing (ExternalMsg(..), Model, Msg(..), initialModel, update, view)
+module Session.Login exposing (Model, initialModel, update, view)
 
 import Graphqelm.Http exposing (Error(..))
-import Graphqelm.Operation exposing (RootMutation)
-import Graphqelm.SelectionSet as SelectionSet exposing (SelectionSet, with)
 import Helpers.Form as Form exposing (input, viewErrors)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Model.Session exposing (Session(..), UserToken)
-import PokerApi.Mutation as Mutation
-import PokerApi.Object.Session as ApiSession
 import RemoteData exposing (RemoteData)
+import Request exposing (createSession)
 import Route exposing (Route(..), redirectTo)
+import Session.Messages exposing (ExternalMsg(..), Msg(..))
 import Util exposing ((=>))
 import Validate exposing (Validator, ifBlank, ifInvalidEmail, validate)
 
@@ -39,25 +37,6 @@ initialModel =
     { email = ""
     , errors = []
     }
-
-
-
--- MESSAGES --
-
-
-type alias SessionData =
-    RemoteData (Graphqelm.Http.Error (Maybe UserToken)) (Maybe UserToken)
-
-
-type Msg
-    = SubmitForm
-    | SetEmail String
-    | LoginCompleted SessionData
-
-
-type ExternalMsg
-    = NoOp
-    | SetSession (Maybe UserToken)
 
 
 
@@ -94,7 +73,7 @@ update msg model =
             case validate modelValidator model of
                 [] ->
                     { model | errors = [] }
-                        => makeRequest model
+                        => createSession model
                         => NoOp
 
                 errors ->
@@ -123,24 +102,6 @@ update msg model =
 
 
 -- REQUEST --
-
-
-sessionSelect =
-    ApiSession.selection UserToken
-        |> with ApiSession.token
-
-
-mutation : Model -> SelectionSet (Maybe UserToken) RootMutation
-mutation model =
-    Mutation.selection identity
-        |> with (Mutation.login { email = model.email } sessionSelect)
-
-
-makeRequest : Model -> Cmd Msg
-makeRequest model =
-    mutation model
-        |> Graphqelm.Http.mutationRequest "http://localhost:4000/api/graphql"
-        |> Graphqelm.Http.send (RemoteData.fromResult >> LoginCompleted)
 
 
 processApiError : Graphqelm.Http.Error (Maybe UserToken) -> List Error
