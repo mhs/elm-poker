@@ -1,5 +1,6 @@
 module Model exposing (Flags, Model, Page(..), initialModel)
 
+import Games.Game as Game
 import Model.Session exposing (Session(..))
 import Session.Login as Login
 
@@ -14,7 +15,7 @@ type Page
     | Home
     | Login Login.Model
     | GameList
-    | Game
+    | Game Game.Model
 
 
 type alias Model =

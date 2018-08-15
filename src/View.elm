@@ -34,5 +34,6 @@ view model =
         GameList ->
             frame (GameList.view model.session)
 
-        Game ->
-            frame Game.view
+        Game subModel ->
+            frame (Game.view subModel)
+                |> Html.map GameMsg

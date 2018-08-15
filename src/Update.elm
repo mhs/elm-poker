@@ -1,5 +1,6 @@
 module Update exposing (init, update)
 
+import Games.Game as Game exposing (getGame, init)
 import Messages as Msg exposing (Msg(..))
 import Model exposing (Flags, Model, Page(..), initialModel)
 import Model.Session exposing (GamesData, Session(..), UserToken)
@@ -14,7 +15,7 @@ import Util exposing ((=>))
 
 init : Flags -> Location -> ( Model, Cmd Msg.Msg )
 init flags location =
-    updateRoute (Route.fromLocation location) (initialModel flags)
+    updateRoute (Route.fromLocation location) (Model.initialModel flags)
 
 
 updateRoute : Maybe Route -> Model -> ( Model, Cmd Msg.Msg )
@@ -53,11 +54,28 @@ updateRoute route model =
 
         Just (Route.Game id) ->
             case model.session of
-                LoggedIn _ _ ->
-                    { model | page = Game } => Cmd.none
-
                 NotLoggedIn ->
                     model => redirectTo Route.Login
+
+                LoggedIn (Just userToken) (RemoteData.Success games) ->
+                    let
+                        maybeGame =
+                            Game.getGame id games
+                    in
+                    case maybeGame of
+                        Nothing ->
+                            { model | page = NotFound } => Cmd.none
+
+                        Just game ->
+                            let
+                                ( gameModel, gameCmd ) =
+                                    Game.init userToken game
+                            in
+                            { model | page = Game gameModel } => Cmd.map GameMsg gameCmd
+
+                LoggedIn _ _ ->
+                    -- This may happen when the user hits the game url directly
+                    Debug.crash "TODO: Not defined yet"
 
 
 update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )

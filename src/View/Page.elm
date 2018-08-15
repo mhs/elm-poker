@@ -71,7 +71,7 @@ isActive currentPage linkRoute =
         ( Model.GameList, Route.GameList ) ->
             True
 
-        ( Model.Game, Route.GameList ) ->
+        ( Model.Game subModel, Route.GameList ) ->
             True
 
         _ ->
