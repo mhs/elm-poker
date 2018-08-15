@@ -47,16 +47,16 @@ game requiredArgs object =
 
 {-| Get all games
 -}
-games : SelectionSet decodesTo PokerApi.Object.Game -> Field (Maybe (List (Maybe decodesTo))) RootQuery
+games : SelectionSet decodesTo PokerApi.Object.Game -> Field (List decodesTo) RootQuery
 games object =
-    Object.selectionField "games" [] object (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
+    Object.selectionField "games" [] object (identity >> Decode.list)
 
 
 {-| Get all games for the current user
 -}
-myGames : SelectionSet decodesTo PokerApi.Object.Game -> Field (List (Maybe decodesTo)) RootQuery
+myGames : SelectionSet decodesTo PokerApi.Object.Game -> Field (List decodesTo) RootQuery
 myGames object =
-    Object.selectionField "myGames" [] object (identity >> Decode.nullable >> Decode.list)
+    Object.selectionField "myGames" [] object (identity >> Decode.list)
 
 
 type alias RoundRequiredArguments =

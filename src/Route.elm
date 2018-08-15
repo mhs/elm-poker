@@ -29,7 +29,7 @@ route =
 {-| Helper to generate route fragments from a given Route.
 
 routeToString Games 42
---- "/games/42"
+--- "#/games/42"
 
 -}
 routeToString : Route -> String

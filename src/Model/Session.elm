@@ -10,7 +10,7 @@ type alias UserToken =
 
 
 type alias GamesDataItems =
-    List (Maybe PokerGame)
+    List PokerGame
 
 
 type alias GamesData =

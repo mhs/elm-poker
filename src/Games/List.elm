@@ -2,7 +2,6 @@ module Games.List exposing (view)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
 import Model.PokerGame exposing (PokerGame)
 import Model.Session exposing (GamesData, GamesDataItems, Session(..))
 import RemoteData exposing (RemoteData)
@@ -47,14 +46,9 @@ listGames session =
             div [] [ list ]
 
 
-gameLink : Maybe PokerGame -> Html msg
-gameLink maybeGame =
-    case maybeGame of
-        Nothing ->
-            Debug.crash "Unparseable game?" (toString maybeGame)
-
-        Just game ->
-            li [ class "lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30" ]
-                [ a [ rhref (Route.Game game.id), class "link hover-black f6 f5-ns dib mr3 mr4-ns" ] [ text game.name ]
-                , text ("( " ++ game.status ++ " )")
-                ]
+gameLink : PokerGame -> Html msg
+gameLink game =
+    li [ class "lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30" ]
+        [ a [ rhref (Route.Game game.id), class "link hover-black f6 f5-ns dib mr3 mr4-ns" ] [ text game.name ]
+        , text ("( " ++ game.status ++ " )")
+        ]
