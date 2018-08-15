@@ -22,4 +22,4 @@ token and the games they belong to.
 -}
 type Session
     = NotLoggedIn
-    | LoggedIn (Maybe UserToken) GamesData
+    | LoggedIn UserToken GamesData

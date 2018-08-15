@@ -57,7 +57,7 @@ updateRoute route model =
                 NotLoggedIn ->
                     model => redirectTo Route.Login
 
-                LoggedIn (Just userToken) (RemoteData.Success games) ->
+                LoggedIn userToken (RemoteData.Success games) ->
                     let
                         maybeGame =
                             Game.getGame id games
@@ -100,7 +100,12 @@ updatePage currentPage msg model =
                             model
 
                         SessionMsg.SetSession userToken ->
-                            { model | session = LoggedIn userToken RemoteData.NotAsked }
+                            case userToken of
+                                Nothing ->
+                                    { model | session = NotLoggedIn }
+
+                                Just token ->
+                                    { model | session = LoggedIn token RemoteData.NotAsked }
             in
             { updatedModel | page = Login pageModel }
                 => Cmd.map LoginMsg cmd
@@ -121,16 +126,11 @@ updatePage currentPage msg model =
 -- REQUEST --
 
 
-maybeFetchGames : Maybe UserToken -> GamesData -> Cmd Msg.Msg
-maybeFetchGames maybeUserToken games =
-    case maybeUserToken of
-        Nothing ->
+maybeFetchGames : UserToken -> GamesData -> Cmd Msg.Msg
+maybeFetchGames userToken games =
+    case games of
+        RemoteData.NotAsked ->
+            gamesQuery userToken
+
+        _ ->
             Cmd.none
-
-        Just userToken ->
-            case games of
-                RemoteData.NotAsked ->
-                    gamesQuery userToken
-
-                _ ->
-                    Cmd.none
