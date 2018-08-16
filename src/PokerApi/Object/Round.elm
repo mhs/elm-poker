@@ -25,9 +25,9 @@ selection constructor =
     Object.selection constructor
 
 
-estimates : SelectionSet decodesTo PokerApi.Object.Estimate -> Field (Maybe (List (Maybe decodesTo))) PokerApi.Object.Round
+estimates : SelectionSet decodesTo PokerApi.Object.Estimate -> Field (List decodesTo) PokerApi.Object.Round
 estimates object =
-    Object.selectionField "estimates" [] object (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
+    Object.selectionField "estimates" [] object (identity >> Decode.list)
 
 
 game : SelectionSet decodesTo PokerApi.Object.Game -> Field decodesTo PokerApi.Object.Round

@@ -1,6 +1,6 @@
-module Games.Game exposing (Model, Msg(..), getGame, init, view)
+module Games.Game exposing (Model, getGame, init, update, view)
 
-import Graphqelm.Http exposing (Error(..))
+import Games.Messages exposing (GameData(..), Msg(..))
 import Html exposing (..)
 import Model.PokerGame exposing (PokerGame)
 import Model.PokerPlayer exposing (PokerPlayer)
@@ -8,34 +8,26 @@ import Model.PokerRound exposing (PokerRound)
 import Model.Session exposing (UserToken)
 import PokerApi.Scalar exposing (Id(..))
 import RemoteData exposing (RemoteData)
+import Request exposing (fetchRoundAndPlayers)
 import Util exposing ((=>))
 
 
 -- MODEL --
 
 
-type alias PlayersData =
-    RemoteData (Graphqelm.Http.Error (List (Maybe PokerPlayer))) (List (Maybe PokerPlayer))
-
-
-type alias RoundData =
-    RemoteData (Graphqelm.Http.Error (Maybe PokerRound)) (Maybe PokerRound)
-
-
-type GameData
-    = GameData PlayersData RoundData
-
-
 type alias Model =
     { game : PokerGame
-    , players : PlayersData
-    , currentRound : RoundData
+
+    -- TODO: Replace players, currentRound with GameDataResponse
+    , players : List PokerPlayer
+    , currentRound : Maybe PokerRound
     }
 
 
 initialModel : PokerGame -> Model
 initialModel game =
-    Model game RemoteData.NotAsked RemoteData.NotAsked
+    -- TODO: Change [] Nothing to RemoteData.NotAsked
+    Model game [] Nothing
 
 
 getGame : Id -> List PokerGame -> Maybe PokerGame
@@ -46,20 +38,27 @@ getGame id games =
 
 
 
--- MESSAGES --
-
-
-type Msg
-    = DataFetched GameData
-
-
-
 -- UPDATE --
 
 
 init : UserToken -> PokerGame -> ( Model, Cmd Msg )
 init userToken game =
-    initialModel game => fetchRoundandPlayers userToken game
+    initialModel game => fetchRoundAndPlayers userToken game.id
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update (DataFetched response) model =
+    case response of
+        RemoteData.Success maybeGameData ->
+            case maybeGameData of
+                Nothing ->
+                    model => Cmd.none
+
+                Just (GameData players maybeRound) ->
+                    { model | players = players, currentRound = maybeRound } => Cmd.none
+
+        _ ->
+            Debug.crash "TODO: handle fetch error"
 
 
 
@@ -70,12 +69,3 @@ view : Model -> Html Msg
 view { game } =
     div []
         [ h1 [] [ text game.name ] ]
-
-
-
--- REQUEST --
-
-
-fetchRoundandPlayers : UserToken -> PokerGame -> Cmd Msg
-fetchRoundandPlayers token game =
-    Cmd.none

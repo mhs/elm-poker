@@ -4,6 +4,6 @@ import PokerApi.Scalar exposing (Id)
 
 
 type alias PokerRound =
-    { id : PokerApi.Scalar.Id
+    { id : Maybe PokerApi.Scalar.Id
     , status : String
     }

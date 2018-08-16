@@ -1,12 +1,13 @@
 module Update exposing (init, update)
 
-import Games.Game as Game exposing (getGame, init)
+import Games.Game as Game exposing (getGame, init, update)
+import Games.Messages as GameMsg exposing (Msg(..))
 import Messages as Msg exposing (Msg(..))
 import Model exposing (Flags, Model, Page(..), initialModel)
 import Model.Session exposing (GamesData, Session(..), UserToken)
 import Navigation exposing (Location)
 import RemoteData exposing (RemoteData)
-import Request exposing (gamesQuery)
+import Request exposing (fetchGames)
 import Route exposing (Route, redirectTo)
 import Session.Login as Login
 import Session.Messages as SessionMsg exposing (ExternalMsg(..), Msg(..))
@@ -118,6 +119,18 @@ updatePage currentPage msg model =
                 LoggedIn userToken _ ->
                     { model | session = LoggedIn userToken gamesData } => Cmd.none
 
+        ( GameMsg gameMsg, Game gameModel ) ->
+            case model.session of
+                NotLoggedIn ->
+                    ( model, Cmd.none )
+
+                LoggedIn _ _ ->
+                    let
+                        ( updated, cmd ) =
+                            Game.update gameMsg gameModel
+                    in
+                    { model | page = Game updated } => Cmd.map GameMsg cmd
+
         ( _, _ ) ->
             ( model, Cmd.none )
 
@@ -130,7 +143,7 @@ maybeFetchGames : UserToken -> GamesData -> Cmd Msg.Msg
 maybeFetchGames userToken games =
     case games of
         RemoteData.NotAsked ->
-            gamesQuery userToken
+            fetchGames userToken
 
         _ ->
             Cmd.none
