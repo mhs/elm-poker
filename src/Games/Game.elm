@@ -9,7 +9,7 @@ import Model.Session exposing (UserToken)
 import PokerApi.Scalar exposing (Id(..))
 import RemoteData exposing (RemoteData)
 import Request exposing (fetchRoundAndPlayers)
-import Util exposing ((=>))
+
 
 
 -- MODEL --
@@ -43,7 +43,7 @@ getGame id games =
 
 init : UserToken -> PokerGame -> ( Model, Cmd Msg )
 init userToken game =
-    initialModel game => fetchRoundAndPlayers userToken game.id
+    ( initialModel game, fetchRoundAndPlayers userToken game.id )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -52,13 +52,13 @@ update (DataFetched response) model =
         RemoteData.Success maybeGameData ->
             case maybeGameData of
                 Nothing ->
-                    model => Cmd.none
+                    ( model, Cmd.none )
 
                 Just (GameData players maybeRound) ->
-                    { model | players = players, currentRound = maybeRound } => Cmd.none
+                    ( { model | players = players, currentRound = maybeRound }, Cmd.none )
 
         _ ->
-            Debug.crash "TODO: handle fetch error"
+            Debug.todo "TODO: handle fetch error"
 
 
 

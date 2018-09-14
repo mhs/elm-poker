@@ -1,6 +1,6 @@
 module Session.Login exposing (Model, initialModel, update, view)
 
-import Graphqelm.Http exposing (Error(..))
+import Graphql.Http exposing (Error(..))
 import Helpers.Form as Form exposing (input, viewErrors)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -10,8 +10,8 @@ import RemoteData exposing (RemoteData)
 import Request exposing (createSession)
 import Route exposing (Route(..), redirectTo)
 import Session.Messages exposing (ExternalMsg(..), Msg(..))
-import Util exposing ((=>))
 import Validate exposing (Validator, ifBlank, ifInvalidEmail, validate)
+
 
 
 -- MODEL --
@@ -71,47 +71,57 @@ update msg model =
     case msg of
         SubmitForm ->
             case validate modelValidator model of
-                [] ->
-                    { model | errors = [] }
-                        => createSession model
-                        => NoOp
+                Ok valid ->
+                    ( ( { model | errors = [] }
+                      , createSession model
+                      )
+                    , NoOp
+                    )
 
-                errors ->
-                    { model | errors = errors }
-                        => Cmd.none
-                        => NoOp
+                Err errors ->
+                    ( ( { model | errors = errors }
+                      , Cmd.none
+                      )
+                    , NoOp
+                    )
 
         SetEmail email ->
-            { model | email = email }
-                => Cmd.none
-                => NoOp
+            ( ( { model | email = email }
+              , Cmd.none
+              )
+            , NoOp
+            )
 
         LoginCompleted (RemoteData.Failure error) ->
-            { model | errors = processApiError error }
-                => Cmd.none
-                => NoOp
+            ( ( { model | errors = processApiError error }
+              , Cmd.none
+              )
+            , NoOp
+            )
 
         LoginCompleted (RemoteData.Success session) ->
-            model
-                => redirectTo Route.Home
-                => SetSession session
+            ( ( model
+              , Cmd.none
+              )
+            , SetSession session
+            )
 
         LoginCompleted _ ->
-            model => Cmd.none => NoOp
+            ( ( model, Cmd.none ), NoOp )
 
 
 
 -- REQUEST --
 
 
-processApiError : Graphqelm.Http.Error (Maybe UserToken) -> List Error
+processApiError : Graphql.Http.Error (Maybe UserToken) -> List Error
 processApiError error =
     case error of
         GraphqlError data errors ->
-            errors |> List.map .message |> List.map (\m -> Form => m)
+            errors |> List.map .message |> List.map (\m -> ( Email, m ))
 
-        HttpError error ->
-            [ Form => toString error ]
+        HttpError errorMsg ->
+            [ ( Form, Debug.toString errorMsg ) ]
 
 
 
@@ -122,7 +132,7 @@ modelValidator : Validator Error Model
 modelValidator =
     Validate.all
         [ Validate.firstError
-            [ ifBlank .email (Email => "can't be blank")
-            , ifInvalidEmail .email <| \email -> Email => "'" ++ email ++ "' is not a valid email address"
+            [ ifBlank .email ( Email, "can't be blank" )
+            , ifInvalidEmail .email <| \email -> ( Email, "'" ++ email ++ "' is not a valid email address" )
             ]
         ]

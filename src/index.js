@@ -1,6 +1,6 @@
-import { Main } from './Main.elm';
+import { Elm } from './Main.elm';
 import registerServiceWorker from './registerServiceWorker';
 
-Main.embed(document.getElementById('root'));
+Elm.Main.init();
 
 registerServiceWorker();
