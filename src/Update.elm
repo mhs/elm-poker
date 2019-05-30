@@ -1,6 +1,7 @@
 module Update exposing (init, update)
 
-import Browser.Navigation exposing (Key)
+import Browser
+import Browser.Navigation as Nav exposing (Key)
 import Games.Game as Game exposing (getGame, init, update)
 import Games.Messages as GameMsg exposing (Msg(..))
 import Messages as Msg exposing (Msg(..))
@@ -131,6 +132,14 @@ updatePage currentPage msg model =
                             Game.update gameMsg gameModel
                     in
                     ( { model | page = Game updated }, Cmd.map GameMsg cmd )
+
+        ( LinkClicked urlRequest, _ ) ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
 
         ( _, _ ) ->
             ( model, Cmd.none )
