@@ -1,37 +1,38 @@
 module Update exposing (init, update)
 
+import Browser
+import Browser.Navigation as Nav exposing (Key)
 import Games.Game as Game exposing (getGame, init, update)
 import Games.Messages as GameMsg exposing (Msg(..))
 import Messages as Msg exposing (Msg(..))
 import Model exposing (Flags, Model, Page(..), initialModel)
 import Model.Session exposing (GamesData, Session(..), UserToken)
-import Navigation exposing (Location)
 import RemoteData exposing (RemoteData)
 import Request exposing (fetchGames)
 import Route exposing (Route, redirectTo)
 import Session.Login as Login
 import Session.Messages as SessionMsg exposing (ExternalMsg(..), Msg(..))
-import Util exposing ((=>))
+import Url exposing (Url)
 
 
-init : Flags -> Location -> ( Model, Cmd Msg.Msg )
-init flags location =
-    updateRoute (Route.fromLocation location) (Model.initialModel flags)
+init : Flags -> Url -> Key -> ( Model, Cmd Msg.Msg )
+init flags location key =
+    updateRoute (Route.fromLocation location) (Model.initialModel flags key)
 
 
 updateRoute : Maybe Route -> Model -> ( Model, Cmd Msg.Msg )
 updateRoute route model =
     case route of
         Nothing ->
-            { model | page = NotFound } => Cmd.none
+            ( { model | page = NotFound }, Cmd.none )
 
         Just Route.Home ->
             case model.session of
                 LoggedIn _ _ ->
-                    model => redirectTo Route.GameList
+                    ( model, redirectTo Route.GameList model.key )
 
                 NotLoggedIn ->
-                    model => redirectTo Route.Login
+                    ( model, redirectTo Route.Login model.key )
 
         Just Route.Login ->
             let
@@ -43,20 +44,20 @@ updateRoute route model =
                         NotLoggedIn ->
                             model
             in
-            { loggedOutModel | page = Login Login.initialModel } => Cmd.none
+            ( { loggedOutModel | page = Login Login.initialModel }, Cmd.none )
 
         Just Route.GameList ->
             case model.session of
                 LoggedIn userToken games ->
-                    { model | page = GameList } => maybeFetchGames userToken games
+                    ( { model | page = GameList }, maybeFetchGames userToken games )
 
                 NotLoggedIn ->
-                    model => redirectTo Route.Login
+                    ( model, redirectTo Route.Login model.key )
 
         Just (Route.Game id) ->
             case model.session of
                 NotLoggedIn ->
-                    model => redirectTo Route.Login
+                    ( model, redirectTo Route.Login model.key )
 
                 LoggedIn userToken (RemoteData.Success games) ->
                     let
@@ -65,18 +66,18 @@ updateRoute route model =
                     in
                     case maybeGame of
                         Nothing ->
-                            { model | page = NotFound } => Cmd.none
+                            ( { model | page = NotFound }, Cmd.none )
 
                         Just game ->
                             let
                                 ( gameModel, gameCmd ) =
                                     Game.init userToken game
                             in
-                            { model | page = Game gameModel } => Cmd.map GameMsg gameCmd
+                            ( { model | page = Game gameModel }, Cmd.map GameMsg gameCmd )
 
                 LoggedIn _ _ ->
                     -- This may happen when the user hits the game url directly
-                    Debug.crash "TODO: Not defined yet"
+                    Debug.todo "TODO: Not defined yet"
 
 
 update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
@@ -95,21 +96,22 @@ updatePage currentPage msg model =
                 ( ( pageModel, cmd ), externalMsg ) =
                     Login.update subMsg subModel
 
-                updatedModel =
+                ( updatedModel, newCmd ) =
                     case externalMsg of
                         SessionMsg.NoOp ->
-                            model
+                            ( model, cmd )
 
                         SessionMsg.SetSession userToken ->
                             case userToken of
                                 Nothing ->
-                                    { model | session = NotLoggedIn }
+                                    ( { model | session = NotLoggedIn }, cmd )
 
                                 Just token ->
-                                    { model | session = LoggedIn token RemoteData.NotAsked }
+                                    ( { model | session = LoggedIn token RemoteData.NotAsked }, redirectTo Route.Home model.key )
             in
-            { updatedModel | page = Login pageModel }
-                => Cmd.map LoginMsg cmd
+            ( { updatedModel | page = Login pageModel }
+            , Cmd.map LoginMsg newCmd
+            )
 
         ( GotGames gamesData, GameList ) ->
             case model.session of
@@ -117,7 +119,7 @@ updatePage currentPage msg model =
                     ( model, Cmd.none )
 
                 LoggedIn userToken _ ->
-                    { model | session = LoggedIn userToken gamesData } => Cmd.none
+                    ( { model | session = LoggedIn userToken gamesData }, Cmd.none )
 
         ( GameMsg gameMsg, Game gameModel ) ->
             case model.session of
@@ -129,7 +131,15 @@ updatePage currentPage msg model =
                         ( updated, cmd ) =
                             Game.update gameMsg gameModel
                     in
-                    { model | page = Game updated } => Cmd.map GameMsg cmd
+                    ( { model | page = Game updated }, Cmd.map GameMsg cmd )
+
+        ( LinkClicked urlRequest, _ ) ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
 
         ( _, _ ) ->
             ( model, Cmd.none )

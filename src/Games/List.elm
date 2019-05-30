@@ -31,7 +31,7 @@ listGames session =
             p [] [ text "Loading your games..." ]
 
         LoggedIn _ (RemoteData.Failure err) ->
-            p [ class "error" ] [ text <| toString err ]
+            p [ class "error" ] [ text <| Debug.toString err ]
 
         LoggedIn _ (RemoteData.Success games) ->
             let

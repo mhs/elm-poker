@@ -1,6 +1,6 @@
-module Games.Messages exposing (..)
+module Games.Messages exposing (GameData(..), GameDataResponse, Msg(..))
 
-import Graphqelm.Http exposing (Error(..))
+import Graphql.Http exposing (Error(..))
 import Model.PokerPlayer exposing (PokerPlayer)
 import Model.PokerRound exposing (PokerRound)
 import RemoteData exposing (RemoteData)
@@ -11,7 +11,7 @@ type GameData
 
 
 type alias GameDataResponse =
-    RemoteData (Graphqelm.Http.Error (Maybe GameData)) (Maybe GameData)
+    RemoteData (Graphql.Http.Error (Maybe GameData)) (Maybe GameData)
 
 
 

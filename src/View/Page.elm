@@ -1,5 +1,6 @@
 module View.Page exposing (frame, rhref)
 
+import Browser
 import Html exposing (..)
 import Html.Attributes as Attr exposing (..)
 import Model exposing (Page(..))
@@ -14,16 +15,20 @@ rhref route =
         |> Attr.href
 
 
-frame : Page -> Session -> Html msg -> Html msg
-frame currentPage session content =
-    div []
-        [ viewHeader currentPage session
-        , section [ class "pa4 black-80 avenir" ]
-            [ div [ class "measure center" ]
-                [ content
+frame : Page -> Session -> String -> Html msg -> Browser.Document msg
+frame currentPage session title content =
+    { title = title
+    , body =
+        [ div []
+            [ viewHeader currentPage session
+            , section [ class "pa4 black-80 avenir" ]
+                [ div [ class "measure center" ]
+                    [ content
+                    ]
                 ]
             ]
         ]
+    }
 
 
 viewHeader : Page -> Session -> Html msg

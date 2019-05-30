@@ -1,9 +1,9 @@
 module Main exposing (main)
 
+import Browser exposing (application)
 import Json.Decode as Decode exposing (Value)
 import Messages exposing (Msg(..))
 import Model exposing (Flags, Model)
-import Navigation exposing (Location)
 import Route exposing (Route)
 import Update exposing (init, update)
 import View exposing (view)
@@ -16,9 +16,11 @@ subscriptions model_ =
 
 main : Program Flags Model Msg
 main =
-    Navigation.programWithFlags (Route.fromLocation >> SetRoute)
+    Browser.application
         { init = init
         , view = view
         , update = update
         , subscriptions = subscriptions
+        , onUrlChange = Route.fromLocation >> SetRoute
+        , onUrlRequest = LinkClicked
         }

@@ -1,8 +1,8 @@
-module Request exposing (..)
+module Request exposing (apiUrl, createSession, fetchGames, fetchRoundAndPlayers, gameDataSelection, gameQuery, gameSelection, gamesQuery, mutation, playerSelection, roundSelection, sessionSelect)
 
 import Games.Messages as GamesMsg exposing (GameData(..), GameDataResponse, Msg(..))
-import Graphqelm.Http exposing (Error(..))
-import Graphqelm.SelectionSet as SelectionSet exposing (SelectionSet, with)
+import Graphql.Http exposing (Error(..))
+import Graphql.SelectionSet as SelectionSet exposing (SelectionSet, with)
 import Messages exposing (Msg(..))
 import Model.PokerGame exposing (PokerGame)
 import Model.PokerPlayer exposing (PokerPlayer)
@@ -38,8 +38,8 @@ mutation model =
 
 createSession model =
     mutation model
-        |> Graphqelm.Http.mutationRequest apiUrl
-        |> Graphqelm.Http.send (RemoteData.fromResult >> LoginCompleted)
+        |> Graphql.Http.mutationRequest apiUrl
+        |> Graphql.Http.send (RemoteData.fromResult >> LoginCompleted)
 
 
 
@@ -61,9 +61,9 @@ gamesQuery =
 
 fetchGames userToken =
     gamesQuery
-        |> Graphqelm.Http.queryRequest apiUrl
-        |> Graphqelm.Http.withHeader "authorization" ("Bearer " ++ userToken.token)
-        |> Graphqelm.Http.send (RemoteData.fromResult >> GotGames)
+        |> Graphql.Http.queryRequest apiUrl
+        |> Graphql.Http.withHeader "authorization" ("Bearer " ++ userToken.token)
+        |> Graphql.Http.send (RemoteData.fromResult >> GotGames)
 
 
 
@@ -95,6 +95,6 @@ gameQuery id =
 
 fetchRoundAndPlayers userToken id =
     gameQuery id
-        |> Graphqelm.Http.queryRequest apiUrl
-        |> Graphqelm.Http.withHeader "authorization" ("Bearer " ++ userToken.token)
-        |> Graphqelm.Http.send (RemoteData.fromResult >> DataFetched)
+        |> Graphql.Http.queryRequest apiUrl
+        |> Graphql.Http.withHeader "authorization" ("Bearer " ++ userToken.token)
+        |> Graphql.Http.send (RemoteData.fromResult >> DataFetched)

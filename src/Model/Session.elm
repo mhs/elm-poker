@@ -1,6 +1,6 @@
 module Model.Session exposing (GamesData, GamesDataItems, Session(..), UserToken)
 
-import Graphqelm.Http exposing (Error(..))
+import Graphql.Http exposing (Error(..))
 import Model.PokerGame exposing (PokerGame)
 import RemoteData exposing (RemoteData)
 
@@ -14,7 +14,7 @@ type alias GamesDataItems =
 
 
 type alias GamesData =
-    RemoteData (Graphqelm.Http.Error GamesDataItems) GamesDataItems
+    RemoteData (Graphql.Http.Error GamesDataItems) GamesDataItems
 
 
 {-| A session represents all of a user's data. Currently it contains their user

@@ -1,8 +1,9 @@
 module Route exposing (Route(..), fromLocation, redirectTo, routeToString)
 
-import Navigation exposing (Location)
+import Browser.Navigation as Navigation exposing (Key, pushUrl)
 import PokerApi.Scalar exposing (Id(..))
-import UrlParser as Url exposing ((</>), Parser, int, oneOf, parseHash, s, string, top)
+import Url exposing (Url)
+import Url.Parser exposing ((</>), Parser, int, map, oneOf, parse, s, string, top)
 
 
 type Route
@@ -19,10 +20,10 @@ type Route
 route : Parser (Route -> a) a
 route =
     oneOf
-        [ Url.map Home top
-        , Url.map Login (s "login")
-        , Url.map Game <| Url.map Id (s "games" </> string) -- more specific than following route
-        , Url.map GameList (s "games")
+        [ Url.Parser.map Home top
+        , Url.Parser.map Login (s "login")
+        , Url.Parser.map Game <| Url.Parser.map Id (s "games" </> string) -- more specific than following route
+        , Url.Parser.map GameList (s "games")
         ]
 
 
@@ -49,15 +50,15 @@ routeToString page =
                 Game (Id id) ->
                     [ "games", id ]
     in
-    "#/" ++ String.join "/" fragments
+    "/" ++ String.join "/" fragments
 
 
-fromLocation : Location -> Maybe Route
+fromLocation : Url -> Maybe Route
 fromLocation location =
-    parseHash route location
+    parse route location
 
 
-redirectTo : Route -> Cmd msg
-redirectTo =
+redirectTo : Route -> Key -> Cmd msg
+redirectTo routeVal key =
     -- TODO: if current user, continue, otherwise go to login
-    routeToString >> Navigation.modifyUrl
+    Navigation.pushUrl key (routeToString routeVal)

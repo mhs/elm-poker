@@ -1,5 +1,6 @@
 module Model exposing (Flags, Model, Page(..), initialModel)
 
+import Browser.Navigation exposing (Key)
 import Games.Game as Game
 import Model.Session exposing (Session(..))
 import Session.Login as Login
@@ -19,13 +20,15 @@ type Page
 
 
 type alias Model =
-    { page : Page
+    { key : Key
+    , page : Page
     , session : Session
     }
 
 
-initialModel : Flags -> Model
-initialModel flags =
-    { page = Blank
+initialModel : Flags -> Key -> Model
+initialModel flags key =
+    { key = key
+    , page = Blank
     , session = NotLoggedIn
     }
