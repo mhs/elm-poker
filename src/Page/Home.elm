@@ -1,4 +1,4 @@
-module View.Home exposing (view)
+module Page.Home exposing (view)
 
 import Html exposing (..)
 

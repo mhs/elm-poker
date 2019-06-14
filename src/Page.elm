@@ -1,11 +1,25 @@
-module View.Page exposing (frame, rhref)
+module Page exposing (Page(..), frame, rhref)
 
 import Browser
 import Html exposing (..)
 import Html.Attributes as Attr exposing (..)
-import Model exposing (Page(..))
-import Model.Session exposing (Session(..))
 import Route exposing (Route(..))
+
+
+
+-- MODEL --
+
+
+type Page
+    = Blank
+    | NotFound
+    | Home
+    | Login
+    | GameList
+
+
+
+-- VIEW --
 
 
 rhref : Route -> Attribute msg
@@ -15,12 +29,12 @@ rhref route =
         |> Attr.href
 
 
-frame : Page -> Session -> String -> Html msg -> Browser.Document msg
-frame currentPage session title content =
+frame : Page -> String -> Html msg -> Browser.Document msg
+frame currentPage title content =
     { title = title
     , body =
         [ div []
-            [ viewHeader currentPage session
+            [ viewHeader currentPage
             , section [ class "pa4 black-80 avenir" ]
                 [ div [ class "measure center" ]
                     [ content
@@ -31,18 +45,14 @@ frame currentPage session title content =
     }
 
 
-viewHeader : Page -> Session -> Html msg
-viewHeader currentPage session =
+viewHeader : Page -> Html msg
+viewHeader currentPage =
     let
         navLinks =
-            case session of
-                NotLoggedIn ->
-                    [ navbarLink currentPage Route.Login [ text "Login" ] ]
-
-                LoggedIn _ _ ->
-                    [ navbarLink currentPage Route.GameList [ text "Games" ]
-                    , navbarLink currentPage Route.Login [ text "Logout" ]
-                    ]
+            [ navbarLink currentPage Route.Home [ text "Home" ]
+            , navbarLink currentPage Route.Login [ text "Login" ]
+            , navbarLink currentPage Route.GameList [ text "Games" ]
+            ]
     in
     header [ class "bg-white black-80 tc pv4 avenir" ]
         [ a [ class "mt2 mb0 link baskerville i fw1 f1", rhref Route.Home ] [ text "Planning Poker" ]
@@ -67,16 +77,13 @@ navbarLink currentPage linkRoute linkContent =
 isActive : Page -> Route -> Bool
 isActive currentPage linkRoute =
     case ( currentPage, linkRoute ) of
-        ( Model.Home, Route.Home ) ->
+        ( Home, Route.Home ) ->
             True
 
-        ( Model.Login subModel, Route.Login ) ->
+        ( Login, Route.Login ) ->
             True
 
-        ( Model.GameList, Route.GameList ) ->
-            True
-
-        ( Model.Game subModel, Route.GameList ) ->
+        ( GameList, Route.GameList ) ->
             True
 
         _ ->

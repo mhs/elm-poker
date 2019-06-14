@@ -10,7 +10,6 @@ type Route
     = Home
     | Login
     | GameList
-    | Game Id
 
 
 
@@ -22,7 +21,6 @@ route =
     oneOf
         [ Url.Parser.map Home top
         , Url.Parser.map Login (s "login")
-        , Url.Parser.map Game <| Url.Parser.map Id (s "games" </> string) -- more specific than following route
         , Url.Parser.map GameList (s "games")
         ]
 
@@ -46,9 +44,6 @@ routeToString page =
 
                 GameList ->
                     [ "games" ]
-
-                Game (Id id) ->
-                    [ "games", id ]
     in
     "/" ++ String.join "/" fragments
 
