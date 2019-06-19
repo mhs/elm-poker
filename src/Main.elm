@@ -3,20 +3,24 @@ module Main exposing (main)
 import Browser exposing (application)
 import Browser.Navigation as Nav exposing (Key)
 import Html exposing (..)
-import Page exposing (Page(..))
-import Page.Login as Login
-import Page.Home as Home
-import Page.NotFound as NotFound
+import Page exposing (Page(..), login, titleFromString)
 import Page.GameList as GameList
-import Route exposing (Route)
+import Page.Home as Home
+import Page.Login as Login exposing (ExternalMsg(..), Msg(..))
+import Page.NotFound as NotFound
+import Route exposing (Route(..), redirectTo)
+import Session exposing (Session(..))
 import Url exposing (Url)
 
+
+
 -- MODEL --
+
 
 type alias Model =
     { key : Key
     , page : Page
-    -- , session : Session
+    , session : Session
     }
 
 
@@ -26,74 +30,113 @@ type alias Flags =
 
 type Msg
     = LinkClicked Browser.UrlRequest
-    | SetRoute (Maybe Route)
+    | SetRoute Url
+    | LoginMsg Login.Msg
+
 
 
 -- INIT --
 
+
 init : Flags -> Url -> Key -> ( Model, Cmd Msg )
 init flags location key =
-    updateRoute (Route.fromLocation location) (initialModel flags key)
+    location |> Route.fromLocation |> updateRoute (initialModel flags key)
 
 
 initialModel : Flags -> Key -> Model
 initialModel flags key =
     { key = key
+    , session = NotLoggedIn
     , page = Blank
     }
 
 
+
 -- UPDATE --
-update: Msg -> Model -> (Model, Cmd Msg)
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        LinkClicked urlRequest ->
-           case urlRequest of
+    case ( msg, model.page ) of
+        ( LinkClicked urlRequest, _ ) ->
+            case urlRequest of
                 Browser.Internal url ->
-                    ( model, Nav.pushUrl model.key (Url.toString url) )
+                    case model.session of
+                        NotLoggedIn ->
+                            ( model, Nav.pushUrl model.key (Url.toString url) )
+
+                        LoggedIn _ ->
+                            ( model, Nav.pushUrl model.key (Url.toString url) )
 
                 Browser.External href ->
                     ( model, Nav.load href )
 
-        SetRoute route ->
-            updateRoute route model
+        ( SetRoute location, _ ) ->
+            location |> Route.fromLocation |> updateRoute model
+
+        ( LoginMsg loginMsg, Page.Login loginModel ) ->
+            let
+                ( ( updatedLogin, loginCmd ), appMsg ) =
+                    Login.update loginMsg loginModel
+            in
+            case appMsg of
+                SetSession session ->
+                    case session of
+                        Nothing ->
+                            ( { model | session = NotLoggedIn, page = Page.Login updatedLogin }, Cmd.map LoginMsg loginCmd )
+
+                        Just token ->
+                            ( { model | session = LoggedIn token }, redirectTo Route.Home model.key )
+
+                NoOp ->
+                    ( { model | page = Page.Login updatedLogin }, Cmd.map LoginMsg loginCmd )
+
+        ( LoginMsg _, _ ) ->
+            ( model, Cmd.none )
+
+
 
 -- VIEW --
+
 
 view : Model -> Browser.Document Msg
 view model =
     let
         title sub =
-            "Elm Poker: " ++ sub
+            titleFromString ("Elm Poker: " ++ sub)
 
-        frame =
-            Page.frame model.page
+        withFrame =
+            Page.frame model.page model.session
     in
     case model.page of
         NotFound ->
-            frame (title "Not Found") NotFound.view
+            withFrame (title "Not Found") NotFound.view
 
         Blank ->
-            frame (title "Loading...") (Html.text "Loading...")
+            withFrame (title "Loading...") (Html.text "Loading...")
 
-        Home ->
-            frame (title "Home") Home.view
+        Page.Home ->
+            withFrame (title "Home") Home.view
 
-        Login ->
-            frame (title "Login") Login.view
+        Page.Login loginModel ->
+            withFrame (title "Login") (Html.map LoginMsg (Login.view loginModel))
 
-        GameList ->
-            frame (title "Games") GameList.view
+        Page.GameList ->
+            withFrame (title "Games") GameList.view
+
 
 
 -- SUBSCRIPTIONS --
+
 
 subscriptions : Model -> Sub msg
 subscriptions model_ =
     Sub.none
 
 
+
 -- MAIN --
+
 
 main : Program Flags Model Msg
 main =
@@ -102,24 +145,26 @@ main =
         , view = view
         , update = update
         , subscriptions = subscriptions
-        , onUrlChange = Route.fromLocation >> SetRoute
+        , onUrlChange = SetRoute
         , onUrlRequest = LinkClicked
         }
 
 
+
 -- HELPERS --
 
-updateRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
-updateRoute route model =
+
+updateRoute : Model -> Maybe Route -> ( Model, Cmd Msg )
+updateRoute model route =
     case route of
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )
 
         Just Route.Home ->
-            ( { model | page = Home }, Cmd.none )
+            ( { model | page = Page.Home }, Cmd.none )
 
         Just Route.Login ->
-            ( { model | page = Login }, Cmd.none )
+            ( { model | page = Page.login }, Cmd.none )
 
         Just Route.GameList ->
-            ( { model | page = GameList }, Cmd.none )
+            ( { model | page = Page.GameList }, Cmd.none )
