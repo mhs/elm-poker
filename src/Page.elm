@@ -57,6 +57,7 @@ viewHeader currentPage session =
                 LoggedIn _ ->
                     [ navbarLink currentPage Route.Home [ text "Home" ]
                     , navbarLink currentPage Route.GameList [ text "Games" ]
+                    , navbarLink currentPage Route.Logout [ text "Logout" ]
                     ]
 
                 NotLoggedIn ->

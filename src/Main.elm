@@ -6,10 +6,11 @@ import Html exposing (..)
 import Page exposing (Page(..), login, titleFromString)
 import Page.GameList as GameList
 import Page.Home as Home
-import Page.Login as Login exposing (ExternalMsg(..), Msg(..))
+import Page.Login as Login exposing (Msg(..))
 import Page.NotFound as NotFound
+import Port.Main as Port exposing (sessionChanged)
 import Route exposing (Route(..), redirectTo)
-import Session exposing (Session(..))
+import Session exposing (Session(..), Email, clearLogin, decodeSession)
 import Url exposing (Url)
 
 
@@ -32,6 +33,7 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | SetRoute Url
     | LoginMsg Login.Msg
+    | SetSession (Maybe Email)
 
 
 
@@ -76,23 +78,22 @@ update msg model =
 
         ( LoginMsg loginMsg, Page.Login loginModel ) ->
             let
-                ( ( updatedLogin, loginCmd ), appMsg ) =
+                ( updatedLogin, loginCmd ) =
                     Login.update loginMsg loginModel
+                appCmd = Cmd.map LoginMsg loginCmd
             in
-            case appMsg of
-                SetSession session ->
-                    case session of
-                        Nothing ->
-                            ( { model | session = NotLoggedIn, page = Page.Login updatedLogin }, Cmd.map LoginMsg loginCmd )
-
-                        Just token ->
-                            ( { model | session = LoggedIn token }, redirectTo Route.Home model.key )
-
-                NoOp ->
-                    ( { model | page = Page.Login updatedLogin }, Cmd.map LoginMsg loginCmd )
+            ( { model | page = Page.Login updatedLogin }, appCmd )
 
         ( LoginMsg _, _ ) ->
             ( model, Cmd.none )
+
+        ( SetSession maybeEmail, _ ) ->
+            case maybeEmail of
+                Nothing ->
+                    ( { model | session = NotLoggedIn, page = Page.login }, Cmd.none )
+
+                Just email ->
+                    ( { model | session = LoggedIn email }, redirectTo Route.Home model.key )
 
 
 
@@ -129,9 +130,9 @@ view model =
 -- SUBSCRIPTIONS --
 
 
-subscriptions : Model -> Sub msg
+subscriptions : Model -> Sub Msg
 subscriptions model_ =
-    Sub.none
+    sessionChanged ( decodeSession >> SetSession)
 
 
 
@@ -165,6 +166,9 @@ updateRoute model route =
 
         Just Route.Login ->
             ( { model | page = Page.login }, Cmd.none )
+
+        Just Route.Logout ->
+            ( { model | page = Page.login },  clearLogin )
 
         Just Route.GameList ->
             ( { model | page = Page.GameList }, Cmd.none )

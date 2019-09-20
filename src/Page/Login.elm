@@ -1,4 +1,4 @@
-module Page.Login exposing (ExternalMsg(..), Model, Msg(..), initialModel, initialView, update, view)
+module Page.Login exposing (Model, Msg(..), initialModel, initialView, update, view)
 
 import Graphql.Http exposing (Error(..))
 import Html exposing (..)
@@ -6,7 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import RemoteData exposing (RemoteData)
 import Route exposing (Route(..), redirectTo)
-import Session exposing (SessionData, UserToken, createSession)
+import Session exposing (Credentials, Email, SessionData, UserToken, createSession, storeLogin, clearLogin)
 import Validate exposing (Validator, ifBlank, ifInvalidEmail, validate)
 import ViewHelpers.Form as Form exposing (input, viewErrors)
 
@@ -19,11 +19,6 @@ type Msg
     = SubmitForm
     | SetEmail String
     | LoginCompleted SessionData
-
-
-type ExternalMsg
-    = NoOp
-    | SetSession (Maybe UserToken)
 
 
 type Field
@@ -52,28 +47,37 @@ initialModel =
 -- UPDATE --
 
 
-update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SubmitForm ->
             case validate modelValidator model of
                 Ok valid ->
-                    ( ( { model | errors = [] }, createSession LoginCompleted model ), NoOp )
+                     ( { model | errors = [] }, createSession LoginCompleted (Credentials model.email) )
 
                 Err errors ->
-                    ( ( { model | errors = errors }, Cmd.none ), NoOp )
+                     ( { model | errors = errors }, Cmd.none )
 
         SetEmail email ->
-            ( ( { model | email = email }, Cmd.none ), NoOp )
+             ( { model | email = email }, Cmd.none )
 
         LoginCompleted (RemoteData.Failure error) ->
-            ( ( { model | errors = processApiError error }, Cmd.none ), NoOp )
+             ( { model | errors = processApiError error }, Cmd.none )
 
-        LoginCompleted (RemoteData.Success session) ->
-            ( ( model, Cmd.none ), SetSession session )
+        LoginCompleted (RemoteData.Success maybeUserToken) ->
+            let
+                cmd =
+                    case maybeUserToken of
+                        Nothing ->
+                            Cmd.none
+
+                        Just token ->
+                            storeLogin model.email token
+            in
+             ( model, cmd )
 
         LoginCompleted _ ->
-            ( ( model, Cmd.none ), NoOp )
+             ( model, Cmd.none )
 
 
 

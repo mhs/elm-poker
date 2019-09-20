@@ -9,6 +9,7 @@ import Url.Parser exposing ((</>), Parser, int, map, oneOf, parse, s, string, to
 type Route
     = Home
     | Login
+    | Logout
     | GameList
 
 
@@ -21,6 +22,7 @@ route =
     oneOf
         [ Url.Parser.map Home top
         , Url.Parser.map Login (s "login")
+        , Url.Parser.map Logout (s "logout")
         , Url.Parser.map GameList (s "games")
         ]
 
@@ -41,6 +43,9 @@ routeToString page =
 
                 Login ->
                     [ "login" ]
+
+                Logout ->
+                    [ "logout" ]
 
                 GameList ->
                     [ "games" ]
