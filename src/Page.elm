@@ -39,7 +39,7 @@ frame currentPage session (Title title) content =
     , body =
         [ div []
             [ viewHeader currentPage session
-            , section [ class "pa4 black-80 avenir" ]
+            , section [ class "pa4 black-80 helvetica" ]
                 [ div [ class "measure center" ]
                     [ content
                     ]
@@ -57,18 +57,28 @@ viewHeader currentPage session =
                 LoggedIn _ ->
                     [ navbarLink currentPage Route.Home [ text "Home" ]
                     , navbarLink currentPage Route.GameList [ text "Games" ]
-                    , navbarLink currentPage Route.Logout [ text "Logout" ]
                     ]
 
                 NotLoggedIn ->
                     [ navbarLink currentPage Route.Home [ text "Home" ]
-                    , navbarLink currentPage Route.Login [ text "Login" ]
                     ]
     in
-    header [ class "bg-white black-80 tc pv4 avenir" ]
-        [ a [ class "mt2 mb0 link baskerville i fw1 f1", rhref Route.Home ] [ text "Planning Poker" ]
-        , nav [ class "bt bb tc mw7 center mt4" ] navLinks
+    nav [ class "helvetica cf pa3 pa3-ns bb" ]
+        [ div [class "fl"]
+            ((a [ class "link pt2 pb2 dim black b f6 f5-ns dib mr3", rhref Route.Home ] [ text "Planning Poker" ]) :: navLinks)
+        , div [class "fr"] ( loginLogout session currentPage )
         ]
+
+
+loginLogout : Session -> Page -> List (Html msg)
+loginLogout session currentPage =
+    case session of
+        LoggedIn email ->
+            [ span [class "mr3"] [text ("Hello, " ++ email ++ "!")]
+            , a [ rhref Route.Logout, class "link pt2 pb2 dim gray f6 f5-ns dib mr3"] [text "Logout"] ]
+
+        NotLoggedIn ->
+            [ a [ rhref Route.Login, class "link pt2 pb2 dim gray f6 f5-ns dib mr3"] [text "Login"] ]
 
 
 navbarLink : Page -> Route -> List (Html msg) -> Html msg
@@ -77,12 +87,12 @@ navbarLink currentPage linkRoute linkContent =
         active =
             case isActive currentPage linkRoute of
                 True ->
-                    "bg-light-green"
+                    "bb bw2"
 
                 False ->
                     ""
     in
-    a [ rhref linkRoute, class "f6 f5-l link bg-animate black-80 hover-bg-lightest-blue dib pa3 ph3-l", class active ] linkContent
+    a [ rhref linkRoute, class "link pt2 pb2 dim gray f6 f5-ns dib mr3", class active ] linkContent
 
 
 rhref : Route -> Attribute msg

@@ -92,7 +92,7 @@ initialView =
 view : Model -> Html Msg
 view model =
     div [ class "mt4 mt6-1 pa4" ]
-        [ h1 [] [ text "Log in" ]
+        [ h1 [class "normal"] [ text "Log in" ]
         , div [ class "measure center" ]
             [ viewErrors model.errors
             , Html.form [ onSubmit SubmitForm ]
