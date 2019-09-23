@@ -1,7 +1,13 @@
 import { Elm } from './Main.elm';
 import registerServiceWorker from './registerServiceWorker';
 
-const app = Elm.Main.init();
+const flags = {data: {}};
+const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+if (currentUser) {
+  flags.data.email = currentUser.email;
+}
+
+const app = Elm.Main.init({ flags });
 
 // Ports
 app.ports.sessionStore.subscribe((payload) => {

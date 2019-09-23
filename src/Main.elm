@@ -3,6 +3,7 @@ module Main exposing (main)
 import Browser exposing (application)
 import Browser.Navigation as Nav exposing (Key)
 import Html exposing (..)
+import Json.Decode as D
 import Page exposing (Page(..), login, titleFromString)
 import Page.GameList as GameList
 import Page.Home as Home
@@ -26,7 +27,7 @@ type alias Model =
 
 
 type alias Flags =
-    {}
+    D.Value
 
 
 type Msg
@@ -47,10 +48,18 @@ init flags location key =
 
 initialModel : Flags -> Key -> Model
 initialModel flags key =
-    { key = key
-    , session = NotLoggedIn
-    , page = Blank
-    }
+    let
+        session =
+            case (decodeSession flags) of
+                Nothing ->
+                    NotLoggedIn
+                Just email ->
+                    LoggedIn email
+    in
+        { key = key
+        , session = session
+        , page = Blank
+        }
 
 
 
@@ -93,7 +102,7 @@ update msg model =
                     ( { model | session = NotLoggedIn, page = Page.login }, Cmd.none )
 
                 Just email ->
-                    ( { model | session = LoggedIn email }, redirectTo Route.Home model.key )
+                    ( { model | session = LoggedIn email }, redirectTo Route.GameList model.key )
 
 
 
