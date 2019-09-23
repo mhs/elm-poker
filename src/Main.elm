@@ -166,18 +166,24 @@ main =
 
 updateRoute : Model -> Maybe Route -> ( Model, Cmd Msg )
 updateRoute model route =
-    case route of
-        Nothing ->
+    case (route, model.session) of
+        (Nothing, _) ->
             ( { model | page = NotFound }, Cmd.none )
 
-        Just Route.Home ->
+        (Just Route.Home, _) ->
             ( { model | page = Page.Home }, Cmd.none )
 
-        Just Route.Login ->
+        (Just Route.Login, NotLoggedIn) ->
             ( { model | page = Page.login }, Cmd.none )
 
-        Just Route.Logout ->
-            ( { model | page = Page.login },  clearLogin )
+        (Just Route.Login, LoggedIn _) ->
+            ( { model | page = Blank }, redirectTo Route.GameList model.key)
 
-        Just Route.GameList ->
+        (Just Route.Logout, _) ->
+            ( { model | page = Blank }, Cmd.batch [ clearLogin, redirectTo Route.Login model.key ] )
+
+        (Just Route.GameList, NotLoggedIn) ->
+            ( { model | page = Blank }, redirectTo Route.Login model.key)
+
+        (Just Route.GameList, LoggedIn _) ->
             ( { model | page = Page.GameList }, Cmd.none )
